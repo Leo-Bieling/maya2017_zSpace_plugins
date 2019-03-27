@@ -1,0 +1,114 @@
+//----------------------------------------
+// MAYA zSPACE IO 2017
+//----------------------------------------
+
+// ----- unload/load plugin
+if(`pluginInfo -q -l "maya_zSpace_JSON_IO_2017.mll"`) unloadPlugin -f "maya_zSpace_JSON_IO_2017.mll";
+loadPlugin("maya_zSpace_JSON_IO_2017.mll");
+
+
+// ----- procedures
+global proc importJSON()
+ {
+ 	// get bool from checkBox called checkBox1
+ 	int $importCol = `checkBox -q -v _checkBox1`;
+    // create necessary nodes
+	string $node = `createNode -n "tmpNode" maya_zSpace_JSON`;
+	string $importMesh = `createNode mesh`;
+
+    // rename node parent to select it later	
+	$parent = `listRelatives - parent $node` ;
+    rename $parent[0] "Maya_zSpace_node_tmp" ;  
+    
+    // open dialog window for import
+	string $Path[] =`fileDialog2 -fileFilter "JSON (*.json)" -cap "Import JSON"`;
+    
+    // make connections and set attributes
+	connectAttr -f ("tmpNode.outMesh") ($importMesh + ".inMesh");
+    setAttr -type "string" ("tmpNode.directoryPath") $Path[0];
+	setAttr ("tmpNode.importJson") 1;
+    setAttr ("tmpNode.importColors") $importCol;
+
+    // add the importMesh to the initialShaderGroup
+	select -r $importMesh;
+	sets -e -forceElement initialShadingGroup;
+	toggleShadeMode;
+	polySetToFaceNormal ;
+
+	refresh; // refresh necessary, otherwise it is not importing
+
+    // select and delete zSpace node					
+	select "Maya_zSpace_node_tmp";		
+	doDelete;		
+ }
+
+
+global proc exportJSON()
+ {
+ 	// get bool from checkBox called checkBox2
+ 	int $exportCol = `checkBox -q -v _checkBox2`;
+ 	
+     // get selection
+	string $seln[] = ` ls -sl `;
+	
+	// open dialog window for import
+    string $Path[] =`fileDialog2 -fileFilter "JSON (*json)" -cap "Export JSON"`;
+    
+    // create necessary nodes
+    string $node = `createNode -n "tmpNode" maya_zSpace_JSON`;
+    string $emptyMesh = `createNode mesh`;
+    
+    // rename node parent to select it later	             
+    $parent = `listRelatives - parent $node` ;
+	rename $parent[0] "Maya_zSpace_node_tmp";
+	
+    // make connection to emptyMesh
+	connectAttr -f ("tmpNode.outMesh") ($emptyMesh + ".inMesh");
+
+    // start loop
+    for($i=0; $i<size($seln); $i++ )
+    {		
+        // duplicate selection and freeze transformation
+        select $seln[$i]; //select $seln[0];
+        duplicate -rr -n "tmpDuplicate";
+        makeIdentity -apply true -t 1 -r 1 -s 1;
+
+        // make connections and set attributes
+        connectAttr -f ("tmpDuplicate.outMesh") ("tmpNode.inMesh");
+
+	    string $newPath = `substring $Path[0] 1 (size($Path[0])-6)` + "_" + $i + ".json";
+
+        setAttr -type "string" ("tmpNode.directoryPath") $newPath;
+        setAttr ("tmpNode.exportJson") 1; 
+        setAttr ("tmpNode.exportColors") $exportCol;
+
+        refresh; // refresh necessary, otherwise it is not exporting
+
+        select -add "tmpDuplicate";
+        doDelete;
+    }    
+ 		
+	// select and delete emptyMesh, zSpace node	 and tmp Duplicate
+    select $emptyMesh;
+    pickWalk -d up;
+	select -add "Maya_zSpace_node_tmp";
+    doDelete;
+ } 
+
+
+// ----- create Window
+string $nodeName = "maya_zSpace_JSON_IO";
+string $windowName = "ZHCODE_zSpace_IO";
+    
+if(`window -exists $windowName`) deleteUI $windowName;
+
+window -t $windowName $windowName;
+rowColumnLayout -numberOfColumns 2 -columnWidth 1 200 -columnWidth 2 100;
+
+button -l "import JSON" -w 200 -c importJSON;
+checkBox -label "import colors" _checkBox1;
+button -l "export JSON" -w 200 -c exportJSON;
+checkBox -label "export colors" _checkBox2;
+setParent ..;
+
+showWindow $windowName;

@@ -1,0 +1,3 @@
+string $PathUS = `internalVar -usd`;
+
+eval ("source \""+$PathUS + "maya2017_zSpace_menu.mel\"");
