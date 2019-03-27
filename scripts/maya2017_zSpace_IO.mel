@@ -16,73 +16,115 @@ string $importMesh;
 string $emptyMesh;
 string $updatedPath;
 
-// ----- procedures
-// procedure for multiple file selection dialog when importing
-global string $FILE_PATH;
-
-global proc setPath(string $path, string $mode)
-{
-  	global string $FILE_PATH;
-  	$FILE_PATH = $path;
-}
-     
-global proc string[] multiFileBrowser()
-{
-  	global string $FILE_PATH;
-  	string $pathsArray[];
-  	while(1)
-  	{		
-	    fileBrowser("setPath", "Import JSON - Click cancel when done", "", 0);
-  		if(!`size $FILE_PATH`) break; 		   
-  		else
-  		{
-  		   $pathsArray[`size $pathsArray`] = $FILE_PATH;
-  		   $FILE_PATH = "";
-  		}
-  	}
-  	return $pathsArray;
-}
-  
+// ----- procedures  
 // import procedure
 global proc importJSON()
 {
  	// get bool from checkBox called checkBox1
  	$importCol = `checkBox -q -v checkBoxImport`;
+
+    // get bool from checkBox called checkBoxMultiFiles
+ 	$importMultiFiles = `checkBox -q -v checkBoxMultiFiles`;
+ 	
     // create necessary nodes
 	$node = `createNode -n "tmpNode" maya_zSpace_JSON`;
 
     // rename node parent to select it later	
 	$parent = `listRelatives - parent $node` ;
-    rename $parent[0] "Maya_zSpace_node_tmp" ;  
-    
-    // open dialog window for import
-	//string $path[] =`fileDialog2 -fileFilter "JSON (*.json)" -cap "Import JSON"`;
-    string $paths[] = `multiFileBrowser`;
+    rename $parent[0] "Maya_zSpace_node_tmp" ; 
 
-    for($i = 0; $i < size($paths); $i++ )
+    // open dialog window for import
+	string $filePath[] =`fileDialog2 -fileFilter "JSON (*.json)" -cap "Import JSON"`;
+
+    if($importMultiFiles == 0)
     {	
         // create empty importMesh
 	    $importMesh = `createNode mesh`;
 
         // make connections and set attributes
 	    connectAttr -f ("tmpNode.outMesh") ($importMesh + ".inMesh");
-        setAttr -type "string" ("tmpNode.directoryPath") $paths[$i];
+        setAttr -type "string" ("tmpNode.directoryPath") $filePath[0];
 	    setAttr ("tmpNode.importJson") 1;
         setAttr ("tmpNode.importColors") $importCol;
         refresh; // refresh necessary, otherwise it is not importing
-        disconnectAttr ("tmpNode.outMesh") ($importMesh + ".inMesh");
 
         // add the importMesh to the initialShaderGroup
 	    select $importMesh;
 	    sets -e -forceElement initialShadingGroup;
 	    toggleShadeMode;
-	    polySetToFaceNormal ;
-    }
-	refresh; // refresh necessary, otherwise it is not importing
+	    polySetToFaceNormal;
 
-    // select and delete zSpace node					
-	select "Maya_zSpace_node_tmp";		
-	doDelete;		
+        // select and delete zSpace node					
+	    select "Maya_zSpace_node_tmp";		
+	    doDelete;
+    }
+    else
+    {
+        // getting the folder path
+        string $buffer1[];
+        $numTokens1 = `tokenize $filePath[0] "/" $buffer1`;
+
+        string $folderPath;
+        for ($i = 0; $i < ($numTokens1 - 1); $i++)
+        {
+            $folderPath = ($folderPath + $buffer1[$i] + "/");
+        }
+
+        $folderPath = `substring $folderPath 1 (size($folderPath) - 1)`;
+
+        // getting array of all files in folder
+        string $fileList[] = `getFileList -fld $folderPath`;
+
+        // getting file full name
+        string $fileNameSuf = $buffer1[(`size($buffer1)` - 1)];
+
+        // getting file name withough suffix
+        string $buffer2[];
+        $numTokens2 = `tokenize $fileNameSuf "_" $buffer2`;
+
+        // necessary in case someone is naming the file with "_" eg: "example_file"
+        string $fileName;
+        for ($i = 0; $i < ($numTokens2 - 1); $i++)
+        {
+            $fileName = ($fileName + $buffer2[$i] + "_");
+        }
+
+        // getting number of files
+        int $numOfFiles;
+
+        for ($i = 0; $i < `size($fileList)`; $i++)
+        {
+        	if(`match $fileName $fileList[$i]` == $fileName) $numOfFiles++;
+        }
+
+        // start loop to import each file
+        for ($i = 0; $i < $numOfFiles; $i++)
+        {
+            // create empty importMesh
+	        $importMesh = `createNode mesh`;
+
+            // make connections and set attributes
+	        connectAttr -f ("tmpNode.outMesh") ($importMesh + ".inMesh");
+            setAttr -type "string" ("tmpNode.directoryPath") ($folderPath + "/" + $fileName + $i + ".json");
+	        setAttr ("tmpNode.importJson") 1;
+            setAttr ("tmpNode.importColors") $importCol;
+            refresh; // refresh necessary, otherwise it is not importing
+            disconnectAttr ("tmpNode.outMesh") ($importMesh + ".inMesh");
+
+            // add the importMesh to the initialShaderGroup
+	        select $importMesh;
+	        sets -e -forceElement initialShadingGroup;
+	        toggleShadeMode;
+	        polySetToFaceNormal;
+        }
+
+        // select and delete zSpace node					
+	    select "Maya_zSpace_node_tmp";		
+	    doDelete;
+
+        
+    }
+		
 }
 
 // export procedure
@@ -95,7 +137,7 @@ global proc exportJSON()
 	string $seln[] = ` ls -sl `;
 	
 	// open dialog window for import
-    string $path[] =`fileDialog2 -fileFilter "JSON (*.json)" -cap "Export JSON"`;
+    string $filePath[] =`fileDialog2 -fileFilter "JSON (*.json)" -cap "Export JSON"`;
     
     // create necessary nodes
     $node = `createNode -n "tmpNode" maya_zSpace_JSON`;
@@ -120,8 +162,8 @@ global proc exportJSON()
         connectAttr -f ("tmpDuplicate.outMesh") ("tmpNode.inMesh");
 
         // if multiple files add _i to the file name
-        if(size($seln) == 1) $updatedPath = $path[0];
-        else $updatedPath = `substring $path[0] 1 (size($path[0])-5)` + "_" + $i + ".json";
+        if(size($seln) == 1) $updatedPath = $filePath[0];
+        else $updatedPath = `substring $filePath[0] 1 (size($filePath[0])-5)` + "_" + $i + ".json";
 
         // set attributes
         setAttr -type "string" ("tmpNode.directoryPath") $updatedPath;
@@ -146,11 +188,12 @@ global proc exportJSON()
 if(`window -exists $windowName`) deleteUI $windowName;
 
 window -t $windowName $windowName;
-rowColumnLayout -numberOfColumns 2 -columnWidth 1 200 -columnWidth 2 100;
+rowColumnLayout -numberOfColumns 3 -columnWidth 1 100 -columnWidth 2 100 -columnWidth 3 150;
 
-button -l "import JSON" -w 200 -c importJSON;
+button -l "import JSON"  -c importJSON;
 checkBox -label "import colors" checkBoxImport;
-button -l "export JSON" -w 200 -c exportJSON;
+checkBox -label "import multiples files" checkBoxMultiFiles;
+button -l "export JSON"  -c exportJSON;
 checkBox -label "export colors" checkBoxExport;
 setParent ..;
 
