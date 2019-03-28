@@ -16,7 +16,43 @@ string $importMesh;
 string $emptyMesh;
 string $updatedPath;
 
-// ----- procedures  
+// ----- procedures
+
+// export curves to TXT
+global proc exportCrvstoTXT()
+{
+    // get file path
+    string $filePath[] =`fileDialog2 -fileFilter "TXT (*.txt)" -cap "Export curve to TXT"`;
+
+    // create List to store values
+    string $crvSel[] = `ls- sl -fl`;
+    string $arrayToPrint[];
+    clear $arrayToPrint;
+    $arrayToPrint[0] = "#";
+
+    // delete file if it already exists
+    sysFile -del $filePath[0];
+
+    // loop through all curves
+    for ($Crv in $crvSel)
+    {
+    	int $NumOfSpan = `getAttr ($Crv+".spans")`;
+    
+    	for($i = 0; $i < $NumOfSpan; $i++)
+    	{
+    		float $Pt[] = `pointPosition ($Crv+".ep["+$i+"]")`;
+    		$arrayToPrint[size($arrayToPrint)] = ("v "+$Pt[0]+" "+$Pt[1]+" "+$Pt[2]);
+    	}
+    	$arrayToPrint[size($arrayToPrint)] = "#";
+    }
+    
+    // write to file
+    $fileId = `fopen $filePath[0] "at"`;
+    for($Line in $arrayToPrint) fprint $fileId ($Line+"\n");
+    fclose $fileId;
+}
+
+
 // import procedure
 global proc importJSON()
 {
@@ -188,13 +224,32 @@ global proc exportJSON()
 if(`window -exists $windowName`) deleteUI $windowName;
 
 window -t $windowName $windowName;
-rowColumnLayout -numberOfColumns 3 -columnWidth 1 100 -columnWidth 2 100 -columnWidth 3 150;
+rowColumnLayout -numberOfColumns 3 -columnWidth 1 180 -columnWidth 2 100 -columnWidth 3 150;
 
-button -l "import JSON"  -c importJSON;
+separator -style "none";
+text -label "TXT";
+separator -style "none";
+
+button -l "export curves to TXT"  -c exportCrvstoTXT;
+separator -style "none";
+separator -style "none";
+
+separator -height 20 -style "in";
+separator -height 20 -style "in";
+separator -height 20 -style "in";
+
+separator -style "none";
+text -label "JSON";
+separator -style "none";
+
+button -l "import mesh from JSON"  -c importJSON;
 checkBox -label "import colors" checkBoxImport;
 checkBox -label "import multiples files" checkBoxMultiFiles;
-button -l "export JSON"  -c exportJSON;
+
+button -l "export meshes to JSON"  -c exportJSON;
 checkBox -label "export colors" checkBoxExport;
+separator -style "none";
+
 setParent ..;
 
 showWindow $windowName;
