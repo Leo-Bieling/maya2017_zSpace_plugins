@@ -8,7 +8,6 @@ loadPlugin("maya2017_zSpace_JSON_IO.mll");
 
 // ----- variables
 string $nodeName = "maya_zSpace_JSON_IO";
-string $windowName = "ZHCODE_zSpace_IO";
 
 int $importCol;
 string $node;
@@ -19,37 +18,49 @@ string $updatedPath;
 // ----- procedures
 
 // export curves to TXT
-global proc exportCrvstoTXT()
+global proc exportCrvGrptoTXT()
 {
     // get file path
-    string $filePath[] =`fileDialog2 -fileFilter "TXT (*.txt)" -cap "Export curve to TXT"`;
+    string $Path[] =`fileDialog2 -fileFilter "TXT (*.txt)" -cap "Export curve to TXT"`;
 
-    // create List to store values
-    string $crvSel[] = `ls- sl -fl`;
-    string $arrayToPrint[];
-    clear $arrayToPrint;
-    $arrayToPrint[0] = "#";
+    //create List to store values
+    string $AllGroup[] = `ls- sl -fl`;
+    string $ArrayToPrint[];
+    string $AllCrvs[];
+    clear $ArrayToPrint;
+    $ArrayToPrint[0] = "#";
 
-    // delete file if it already exists
-    sysFile -del $filePath[0];
+    //loop through all curves
+    for ($Grp in $AllGroup)
+    {    
+    	$AllCrvs = `listRelatives -c $Grp`;
 
-    // loop through all curves
-    for ($Crv in $crvSel)
-    {
-    	int $NumOfSpan = `getAttr ($Crv+".spans")`;
-    
-    	for($i = 0; $i < $NumOfSpan; $i++)
+    	for($Crv in  $AllCrvs)
     	{
-    		float $Pt[] = `pointPosition ($Crv+".ep["+$i+"]")`;
-    		$arrayToPrint[size($arrayToPrint)] = ("v "+$Pt[0]+" "+$Pt[1]+" "+$Pt[2]);
-    	}
-    	$arrayToPrint[size($arrayToPrint)] = "#";
-    }
+    	    $ArrayToPrint[size($ArrayToPrint)] = "{";
     
-    // write to file
-    $fileId = `fopen $filePath[0] "at"`;
-    for($Line in $arrayToPrint) fprint $fileId ($Line+"\n");
-    fclose $fileId;
+    		int $NumOfSpan = `getAttr ($Crv+".spans")`;
+    
+    		for($i = 0; $i < ($NumOfSpan+1); $i++)
+    		{
+    			float $Pt[] = `pointPosition ($Crv+".ep["+$i+"]")`;
+    			$ArrayToPrint[size($ArrayToPrint)] = ("v "+$Pt[0]+" "+$Pt[1]+" "+$Pt[2]);
+    		}
+    
+    		$ArrayToPrint[size($ArrayToPrint)] = "}";
+    	}
+    	$ArrayToPrint[size($ArrayToPrint)] = "#";
+    
+    	clear $AllCrvs;
+}
+
+
+//write to file
+$fileId = `fopen $Path[0] "w"`;
+
+for($Line in $ArrayToPrint) fprint $fileId ($Line+"\n");
+
+fclose $fileId ;
 }
 
 
@@ -221,6 +232,8 @@ global proc exportJSON()
 } 
 
 // ----- create Window 
+string $windowName = "zSpace_IO";
+
 if(`window -exists $windowName`) deleteUI $windowName;
 
 window -t $windowName $windowName;
@@ -230,7 +243,7 @@ separator -style "none";
 text -label "TXT";
 separator -style "none";
 
-button -l "export curves to TXT"  -c exportCrvstoTXT;
+button -l "export curves to TXT"  -c exportCrvGrptoTXT;
 separator -style "none";
 separator -style "none";
 
@@ -244,7 +257,7 @@ separator -style "none";
 
 button -l "import mesh from JSON"  -c importJSON;
 checkBox -label "import colors" checkBoxImport;
-checkBox -label "import multiples files" checkBoxMultiFiles;
+checkBox -label "import multiple files" checkBoxMultiFiles;
 
 button -l "export meshes to JSON"  -c exportJSON;
 checkBox -label "export colors" checkBoxExport;
