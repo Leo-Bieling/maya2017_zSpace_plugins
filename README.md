@@ -7,9 +7,9 @@ written by Vishu Bhooshan, Leo Bieling and Marko Margeta
 * copy the content of the __script__ folder to: C:\Users\%USERPROFILE%\Documents\maya\2017\scripts
 * open Maya2017 and drag&drop the __setup.mel__ into the viewport
 * from then on the zSpace shelf and menu title will always show up
----
+
 ## Deinstall/ Reinstall
----
+
 * go to C:\Users\%USERPROFILE%\Documents\maya\2017\scripts and open the userSetup.mel file in a test editor
 * delete the line saying __"//zSpace"__ and the follworing line starting with __"source"__
 * save and close the file
