@@ -5,7 +5,7 @@ written by Vishu Bhooshan, Leo Bieling and Marko Margeta
 ---
 * copy the content of the __plug-ins__ folder to: C:\Program Files\Autodesk\Maya2017\bin\plug-ins
 * copy the content of the __script__ folder to: C:\Users\%USERPROFILE%\Documents\maya\2017\scripts
-* open Maya2017 and drag&drop the __setupScript.mel__ into the viewport
+* open Maya2017 and drag&drop the __setup.mel__ into the viewport
 * from then on the zSpace shelf and menu title will always show up
 ---
 # Deinstall/ Reinstall
