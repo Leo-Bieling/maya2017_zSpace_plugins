@@ -17,55 +17,97 @@ string $updatedPath;
 
 // ----- procedures
 
-// export curves to TXT
-global proc exportCrvGrptoTXT()
+// import graph procedure
+global proc importGraphJSON()
 {
+
+    // create necessary nodes
+	$node = `createNode -n "tmpNode" maya_zSpace_JSON`;
+    $emptyMesh = `createNode mesh`;
+
+
+    // rename node parent to select it later	
+	$parent = `listRelatives - parent $node`;
+    rename $parent[0] "Maya_zSpace_node_tmp";
+
+    // make connection to emptyMesh
+	connectAttr -f ("tmpNode.outMesh") ($emptyMesh + ".inMesh");
+
+    // open dialog window for import
+	string $filePath[] =`fileDialog2 -fileFilter "JSON (*.json)" -cap "Import graph as JSON"`;
+
+   	if(size($filePath) != 0)
+    {
+        // set attributes
+        setAttr -type "string" ("tmpNode.directoryPath") $filePath;
+        setAttr ("tmpNode.importCurvesJson") 1; 
+
+        refresh; // refresh necessary, otherwise it is not exporting
+
+        // select and delete emptyMesh, zSpace node	and tmp Duplicate
+        select $emptyMesh;
+        pickWalk -d up;
+	    select -add "Maya_zSpace_node_tmp";
+        doDelete;
+    }else
+    {
+        select $emptyMesh;
+        pickWalk -d up;
+	    select -add "Maya_zSpace_node_tmp";
+        doDelete;
+    }   
+}
+
+
+// export graph procedure
+global proc exportGraphJSON()
+{
+    // get selection
+	string $seln[] = ` ls -sl `;
+
     // get file path
-    string $Path[] =`fileDialog2 -fileFilter "TXT (*.txt)" -cap "Export curve to TXT"`;
+    string $filePath[] =`fileDialog2 -fileFilter "JSON (*.json)" -cap "Export graph as JSON"`;
 
-    //create List to store values
-    string $AllGroup[] = `ls- sl -fl`;
-    string $ArrayToPrint[];
-    string $AllCrvs[];
-    clear $ArrayToPrint;
-    $ArrayToPrint[0] = "#";
+    // create necessary nodes
+    $node = `createNode -n "tmpNode" maya_zSpace_JSON`;
+    $emptyMesh = `createNode mesh`;
 
-    //loop through all curves
-    for ($Grp in $AllGroup)
-    {    
-    	$AllCrvs = `listRelatives -c $Grp`;
+    // rename node parent to select it later	             
+    $parent = `listRelatives - parent $node` ;
+	rename $parent[0] "Maya_zSpace_node_tmp";
+	
+	// make connection to emptyMesh
+	connectAttr -f ("tmpNode.outMesh") ($emptyMesh + ".inMesh");
 
-    	for($Crv in  $AllCrvs)
-    	{
-    	    $ArrayToPrint[size($ArrayToPrint)] = "{";
-    
-    		int $NumOfSpan = `getAttr ($Crv+".spans")`;
-    
-    		for($i = 0; $i < ($NumOfSpan+1); $i++)
-    		{
-    			float $Pt[] = `pointPosition ($Crv+".ep["+$i+"]")`;
-    			$ArrayToPrint[size($ArrayToPrint)] = ("v "+$Pt[0]+" "+$Pt[1]+" "+$Pt[2]);
-    		}
-    
-    		$ArrayToPrint[size($ArrayToPrint)] = "}";
-    	}
-    	$ArrayToPrint[size($ArrayToPrint)] = "#";
-    
-    	clear $AllCrvs;
+    for($i = 0; $i < size($seln); $i++ )
+    {
+        // duplicate selection and freeze transformation
+        select $seln[$i];
+        duplicate -rr -n "tmpDuplicate";
+        makeIdentity -apply true -t 1 -r 1 -s 1;
+
+        // make connections and set attributes
+        connectAttr -f ("tmpDuplicate.worldSpace") ("tmpNode.inCurves[" + $i + "]");
+        
+        select "tmpDuplicate";
+        doDelete; 
+    }
+
+    // set attributes
+    setAttr -type "string" ("tmpNode.directoryPath") $filePath;
+    setAttr ("tmpNode.exportCurvesJson") 1; 
+
+    refresh; // refresh necessary, otherwise it is not exporting
+
+    // select and delete emptyMesh, zSpace node	and tmp Duplicate
+    select $emptyMesh;
+    pickWalk -d up;
+	select -add "Maya_zSpace_node_tmp";
+    doDelete;
 }
 
-
-//write to file
-$fileId = `fopen $Path[0] "w"`;
-
-for($Line in $ArrayToPrint) fprint $fileId ($Line+"\n");
-
-fclose $fileId ;
-}
-
-
-// import procedure
-global proc importJSON()
+// import mesh procedure
+global proc importMeshJSON()
 {
  	// get bool from checkBox called checkBox1
  	$importCol = `checkBox -q -v checkBoxImport`;
@@ -81,110 +123,118 @@ global proc importJSON()
     rename $parent[0] "Maya_zSpace_node_tmp" ; 
 
     // open dialog window for import
-	string $filePath[] =`fileDialog2 -fileFilter "JSON (*.json)" -cap "Import JSON"`;
+	string $filePath[] =`fileDialog2 -fileFilter "JSON (*.json)" -cap "Import mesh as JSON"`;
 
-    if($importMultiFiles == 0)
-    {	
-        // create empty importMesh
-	    $importMesh = `createNode mesh`;
+    if(size($filePath) != 0)
+    {
+        if($importMultiFiles == 0)
+        {	
+            // create empty importMesh
+    	    $importMesh = `createNode mesh`;
 
-        // make connections and set attributes
-	    connectAttr -f ("tmpNode.outMesh") ($importMesh + ".inMesh");
-        setAttr -type "string" ("tmpNode.directoryPath") $filePath[0];
-	    setAttr ("tmpNode.importJson") 1;
-        setAttr ("tmpNode.importColors") $importCol;
-        refresh; // refresh necessary, otherwise it is not importing
+            // make connections and set attributes
+    	    connectAttr -f ("tmpNode.outMesh") ($importMesh + ".inMesh");
+            setAttr -type "string" ("tmpNode.directoryPath") $filePath[0];
+    	    setAttr ("tmpNode.importMeshJson") 1;
+            setAttr ("tmpNode.importMeshColors") $importCol;
+            refresh; // refresh necessary, otherwise it is not importing
 
-        // add the importMesh to the initialShaderGroup
-	    select $importMesh;
-	    sets -e -forceElement initialShadingGroup;
-	    toggleShadeMode;
-	    polySetToFaceNormal;
+            // add the importMesh to the initialShaderGroup
+    	    select $importMesh;
+    	    sets -e -forceElement initialShadingGroup;
+    	    toggleShadeMode;
+    	    polySetToFaceNormal;
 
-        // select and delete zSpace node					
-	    select "Maya_zSpace_node_tmp";		
-	    doDelete;
+            // select and delete zSpace node					
+    	    select "Maya_zSpace_node_tmp";		
+    	    doDelete;
+        }
+        else
+        {
+            // getting the folder path
+            string $buffer1[];
+            $numTokens1 = `tokenize $filePath[0] "/" $buffer1`;
+
+            string $folderPath;
+            for ($i = 0; $i < ($numTokens1 - 1); $i++)
+            {
+                $folderPath = ($folderPath + $buffer1[$i] + "/");
+            }
+
+            $folderPath = `substring $folderPath 1 (size($folderPath) - 1)`;
+
+            // getting array of all files in folder
+            string $fileList[] = `getFileList -fld $folderPath`;
+
+            // getting file full name
+            string $fileNameSuf = $buffer1[(`size($buffer1)` - 1)];
+
+            // getting file name withough suffix
+            string $buffer2[];
+            $numTokens2 = `tokenize $fileNameSuf "_" $buffer2`;
+
+            // necessary in case someone is naming the file with "_" eg: "example_file"
+            string $fileName;
+            for ($i = 0; $i < ($numTokens2 - 1); $i++)
+            {
+                $fileName = ($fileName + $buffer2[$i] + "_");
+            }
+
+            // getting number of files
+            int $numOfFiles;
+
+            for ($i = 0; $i < `size($fileList)`; $i++)
+            {
+            	if(`match $fileName $fileList[$i]` == $fileName) $numOfFiles++;
+            }
+
+            // start loop to import each file
+            for ($i = 0; $i < $numOfFiles; $i++)
+            {
+                // create empty importMesh
+    	        $importMesh = `createNode mesh`;
+
+                // make connections and set attributes
+    	        connectAttr -f ("tmpNode.outMesh") ($importMesh + ".inMesh");
+                setAttr -type "string" ("tmpNode.directoryPath") ($folderPath + "/" + $fileName + $i + ".json");
+    	        setAttr ("tmpNode.importMeshJson") 1;
+                setAttr ("tmpNode.importMeshColors") $importCol;
+                refresh; // refresh necessary, otherwise it is not importing
+                disconnectAttr ("tmpNode.outMesh") ($importMesh + ".inMesh");
+
+                // add the importMesh to the initialShaderGroup
+    	        select $importMesh;
+    	        sets -e -forceElement initialShadingGroup;
+    	        toggleShadeMode;
+    	        polySetToFaceNormal;
+            }
+
+            // select and delete zSpace node					
+    	    select "Maya_zSpace_node_tmp";		
+    	    doDelete;
+
+
+        }
     }
     else
     {
-        // getting the folder path
-        string $buffer1[];
-        $numTokens1 = `tokenize $filePath[0] "/" $buffer1`;
-
-        string $folderPath;
-        for ($i = 0; $i < ($numTokens1 - 1); $i++)
-        {
-            $folderPath = ($folderPath + $buffer1[$i] + "/");
-        }
-
-        $folderPath = `substring $folderPath 1 (size($folderPath) - 1)`;
-
-        // getting array of all files in folder
-        string $fileList[] = `getFileList -fld $folderPath`;
-
-        // getting file full name
-        string $fileNameSuf = $buffer1[(`size($buffer1)` - 1)];
-
-        // getting file name withough suffix
-        string $buffer2[];
-        $numTokens2 = `tokenize $fileNameSuf "_" $buffer2`;
-
-        // necessary in case someone is naming the file with "_" eg: "example_file"
-        string $fileName;
-        for ($i = 0; $i < ($numTokens2 - 1); $i++)
-        {
-            $fileName = ($fileName + $buffer2[$i] + "_");
-        }
-
-        // getting number of files
-        int $numOfFiles;
-
-        for ($i = 0; $i < `size($fileList)`; $i++)
-        {
-        	if(`match $fileName $fileList[$i]` == $fileName) $numOfFiles++;
-        }
-
-        // start loop to import each file
-        for ($i = 0; $i < $numOfFiles; $i++)
-        {
-            // create empty importMesh
-	        $importMesh = `createNode mesh`;
-
-            // make connections and set attributes
-	        connectAttr -f ("tmpNode.outMesh") ($importMesh + ".inMesh");
-            setAttr -type "string" ("tmpNode.directoryPath") ($folderPath + "/" + $fileName + $i + ".json");
-	        setAttr ("tmpNode.importJson") 1;
-            setAttr ("tmpNode.importColors") $importCol;
-            refresh; // refresh necessary, otherwise it is not importing
-            disconnectAttr ("tmpNode.outMesh") ($importMesh + ".inMesh");
-
-            // add the importMesh to the initialShaderGroup
-	        select $importMesh;
-	        sets -e -forceElement initialShadingGroup;
-	        toggleShadeMode;
-	        polySetToFaceNormal;
-        }
-
         // select and delete zSpace node					
-	    select "Maya_zSpace_node_tmp";		
-	    doDelete;
-
-        
+    	select "Maya_zSpace_node_tmp";		
+    	doDelete; 
     }
-		
 }
 
-// export procedure
-global proc exportJSON()
+// export mesh procedure
+global proc exportMeshJSON()
 {
  	// get bool from checkBox called checkBox2
  	$exportCol = `checkBox -q -v checkBoxExport`;
  	
-     // get selection
+    // get selection
 	string $seln[] = ` ls -sl `;
 	
 	// open dialog window for import
-    string $filePath[] =`fileDialog2 -fileFilter "JSON (*.json)" -cap "Export JSON"`;
+    string $filePath[] =`fileDialog2 -fileFilter "JSON (*.json)" -cap "Export mesh as JSON"`;
     
     // create necessary nodes
     $node = `createNode -n "tmpNode" maya_zSpace_JSON`;
@@ -214,8 +264,8 @@ global proc exportJSON()
 
         // set attributes
         setAttr -type "string" ("tmpNode.directoryPath") $updatedPath;
-        setAttr ("tmpNode.exportJson") 1; 
-        setAttr ("tmpNode.exportColors") $exportCol;
+        setAttr ("tmpNode.exportMeshJson") 1; 
+        setAttr ("tmpNode.exportMeshColors") $exportCol;
 
         refresh; // refresh necessary, otherwise it is not exporting
 
@@ -240,10 +290,14 @@ window -t $windowName $windowName;
 rowColumnLayout -numberOfColumns 3 -columnWidth 1 180 -columnWidth 2 100 -columnWidth 3 150;
 
 separator -style "none";
-text -label "TXT";
+text -label "Graph JSON";
 separator -style "none";
 
-button -l "export curves to TXT"  -c exportCrvGrptoTXT;
+button -l "export curves to JSON graph"  -c exportGraphJSON;
+separator -style "none";
+separator -style "none";
+
+button -l "import curves from JSON graph"  -c importGraphJSON;
 separator -style "none";
 separator -style "none";
 
@@ -252,17 +306,31 @@ separator -height 20 -style "in";
 separator -height 20 -style "in";
 
 separator -style "none";
-text -label "JSON";
+text -label "Mesh JSON";
 separator -style "none";
 
-button -l "import mesh from JSON"  -c importJSON;
+button -l "import mesh from JSON"  -c importMeshJSON;
 checkBox -label "import colors" checkBoxImport;
 checkBox -label "import multiple files" checkBoxMultiFiles;
 
-button -l "export meshes to JSON"  -c exportJSON;
+button -l "export meshes to JSON"  -c exportMeshJSON;
 checkBox -label "export colors" checkBoxExport;
 separator -style "none";
 
 setParent ..;
 
 showWindow $windowName;
+
+
+
+
+// ----- clean up when opening a new file
+global proc unloadPlugs()
+{
+    print("unloadingPlugs \n ")    ;
+    unloadPlugin("maya2017_zSpace_JSON_IO.mll");
+
+    deleteUI -window zSpace_IO;
+}
+
+scriptJob -e "NewSceneOpened"  unloadPlugs; 

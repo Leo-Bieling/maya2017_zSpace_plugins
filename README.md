@@ -8,6 +8,20 @@ written by Vishu Bhooshan, Leo Bieling and Marko Margeta
 * open Maya2017 and drag&drop the __setupScript.mel__ into the viewport
 * from then on the zSpace shelf and menu title will always show up
 ---
+# Deinstall/ Reinstall
+---
+* go to C:\Users\%USERPROFILE%\Documents\maya\2017\scripts and open the userSetup.mel file in a test editor
+* delete the line saying __"//zSpace"__ and the follworing line starting with __"source"__
+* save and close the file
+* in the same directory (C:\Users\%USERPROFILE%\Documents\maya\2017\scripts) delete the follworing files/ folders:
+  * folder called __icons__
+  * file called __maya2017_zSpace_IO.mel__
+  * file called __maya2017_zSpace_menu.mel__
+* in your __plug-ins__ directory (C:\Program Files\Autodesk\Maya2017\bin\plug-ins) delete the following files:
+  * file called __maya2017_zSpace_JSON_IO.mll__
+* at that point the zSpace plugin is deinstalled
+* to reinstall after e.g. pulling a newer version of the plugin follow the steps of **Install** again
+---
 ---
 ## Plugins
 ---
