@@ -289,15 +289,15 @@ if(`window -exists $windowName`) deleteUI $windowName;
 window -t $windowName $windowName;
 rowColumnLayout -numberOfColumns 3 -columnWidth 1 180 -columnWidth 2 100 -columnWidth 3 150;
 
-separator -style "none";
 text -label "Graph JSON";
 separator -style "none";
+separator -style "none";
 
-button -l "export curves to JSON graph"  -c exportGraphJSON;
+button -label "export curve(s) to JSON"  -c exportGraphJSON;
 separator -style "none";
 separator -style "none";
 
-button -l "import curves from JSON graph"  -c importGraphJSON;
+button -label "import curve(s) from JSON"  -c importGraphJSON;
 separator -style "none";
 separator -style "none";
 
@@ -305,17 +305,17 @@ separator -height 20 -style "in";
 separator -height 20 -style "in";
 separator -height 20 -style "in";
 
-separator -style "none";
 text -label "Mesh JSON";
 separator -style "none";
+separator -style "none";
 
-button -l "import mesh from JSON"  -c importMeshJSON;
-checkBox -label "import colors" checkBoxImport;
-checkBox -label "import multiple files" checkBoxMultiFiles;
-
-button -l "export meshes to JSON"  -c exportMeshJSON;
+button -label "export mesh(es) to JSON"  -c exportMeshJSON;
 checkBox -label "export colors" checkBoxExport;
 separator -style "none";
+
+button -label "import mesh(es) from JSON"  -c importMeshJSON;
+checkBox -label "import colors" checkBoxImport;
+checkBox -label "import multiple files" checkBoxMultiFiles;
 
 setParent ..;
 
