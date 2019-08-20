@@ -281,12 +281,25 @@ global proc exportMeshJSON()
     doDelete;
 } 
 
+// ----- clean up when opening a new file
+global proc unloadPlugs()
+{
+    print("unloadingPlugs \n ")    ;
+    unloadPlugin("maya2017_zSpace_JSON_IO.mll");
+
+    deleteUI -window zSpace_IO;
+}
+
+scriptJob -e "NewSceneOpened" unloadPlugs;
+scriptJob -e "SceneOpened" unloadPlugs;
+
+
 // ----- create Window 
 string $windowName = "zSpace_IO";
 
-if(`window -exists $windowName`) deleteUI $windowName;
+if(`window -exists $windowName`) deleteUI $windowName unloadPlugs;
 
-window -t $windowName $windowName;
+window -title $windowName -closeCommand "unloadPlugin(\"maya2017_zSpace_JSON_IO.mll\")" $windowName;
 rowColumnLayout -numberOfColumns 3 -columnWidth 1 180 -columnWidth 2 100 -columnWidth 3 150;
 
 text -label "Graph JSON";
@@ -320,17 +333,3 @@ checkBox -label "import multiple files" checkBoxMultiFiles;
 setParent ..;
 
 showWindow $windowName;
-
-
-
-
-// ----- clean up when opening a new file
-global proc unloadPlugs()
-{
-    print("unloadingPlugs \n ")    ;
-    unloadPlugin("maya2017_zSpace_JSON_IO.mll");
-
-    deleteUI -window zSpace_IO;
-}
-
-scriptJob -e "NewSceneOpened"  unloadPlugs; 
