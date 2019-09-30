@@ -49,6 +49,10 @@ if(`layout -q -ex "zSpace"`)
 	
 		string $Im1Path = ($PathUS + "icons/io.png");
 		shelfButton -w 30 -p "zSpace" -annotation "Opens the zSpace IO window" -image1 $Im1Path -command ("source \"" + $PathUS + "maya2017_zSpace_IO.mel\"");
+
+		string $Im2Path = ($PathUS + "icons/3dgs.png");
+		shelfButton -w 60 -p "zSpace" -annotation "Opens the 3d Graphic Statics window" -image1 $Im2Path -command ("source \"" + $PathUS + "maya2017_zSpace_polytopals.mel\"");
+
 	 }
 
     print "Buttons loaded\n";
@@ -59,6 +63,9 @@ else
 
     string $Im1Path = ($PathUS + "icons/io.png");
 	shelfButton -w 30 -p "zSpace" -annotation "Opens the zSpace IO window" -image1 $Im1Path -command ("source \"" + $PathUS + "maya2017_zSpace_IO.mel\"");
+
+	string $Im2Path = ($PathUS + "icons/3dgs.png");
+	shelfButton -w 60 -p "zSpace" -annotation "Opens the 3d Graphic Statics window" -image1 $Im2Path -command ("source \"" + $PathUS + "maya2017_zSpace_polytopals.mel\"");
     
    print "Buttons loaded\n";
 }
@@ -73,5 +80,6 @@ global string $gMainWindow;
 $myMenuMain = `menu -p $gMainWindow -tearOff true -l "zSpace" zSpace`;
 
 menuItem -p $myMenuMain -l "zSpace IO" -command ("source \"" + $PathUS + "maya2017_zSpace_IO.mel\"");
+menuItem -p $myMenuMain -l "zSpace 3D Graphic Statics" -command ("source \"" + $PathUS + "maya2017_zSpace_polytopals.mel\"");
 
 print "Menus loaded\n";

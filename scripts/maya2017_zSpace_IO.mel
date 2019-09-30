@@ -6,7 +6,6 @@
 if(`pluginInfo -q -l "maya2017_zSpace_JSON_IO.mll"`) unloadPlugin -f "maya2017_zSpace_JSON_IO.mll";
 loadPlugin("maya2017_zSpace_JSON_IO.mll");
 
-// ----- variables
 string $nodeName = "maya_zSpace_JSON_IO";
 
 int $importCol;
@@ -299,7 +298,7 @@ string $windowName = "zSpace_IO";
 
 if(`window -exists $windowName`) deleteUI $windowName unloadPlugs;
 
-window -title $windowName -closeCommand "unloadPlugin(\"maya2017_zSpace_JSON_IO.mll\")" $windowName;
+window -backgroundColor 0.1 0.1 0.1 -title $windowName  -closeCommand "unloadPlugin(\"maya2017_zSpace_JSON_IO.mll\")" $windowName;
 rowColumnLayout -numberOfColumns 3 -columnWidth 1 180 -columnWidth 2 100 -columnWidth 3 150;
 
 text -label "Graph JSON";
