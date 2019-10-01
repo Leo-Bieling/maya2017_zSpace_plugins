@@ -17,8 +17,10 @@ written by Vishu Bhooshan, Leo Bieling and Marko Margeta
   * folder called **icons**
   * file called **maya2017_zSpace_IO.mel**
   * file called **maya2017_zSpace_menu.mel**
+  * file called **maya2017_zSpace_polytopals.mel**
 * in your **plug-ins** directory (*C:\Program Files\Autodesk\Maya2017\bin\plug-ins*) delete the following files:
   * file called **maya2017_zSpace_JSON_IO.mll**
+  * file called **maya2017_zSpace_Polytopal.mll**
 * at that point the zSpace plugin is deinstalled
 * to reinstall after e.g. pulling a newer version of the plugin follow the steps of **Install** again
 ---
@@ -40,3 +42,5 @@ written by Vishu Bhooshan, Leo Bieling and Marko Margeta
 * check **export colors** to add the color data
 * if multiple meshes are selected for export it will export one .json file per mesh with the _0 suffix automatically added
 ---
+### zSpace_3DGS
+##### documentation will be added soon.

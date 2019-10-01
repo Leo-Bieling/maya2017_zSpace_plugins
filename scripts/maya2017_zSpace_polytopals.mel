@@ -10,6 +10,7 @@ if(size($seln) == 0)
     error "No Polyhedra selected!";
 }
 
+//// freeze all polyhedra
 makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 -pn 1;
 
 confirmDialog -message "Please define the working directory/ folder in the next dialog window." -button "Ok";
@@ -20,7 +21,7 @@ string $windowName = "zSpace_Polytopal";
 // ----- unload plugin
 global proc unloadPlugs()
 {
-        unloadPlugin -f "maya_zSpace_Polytopal_2017.mll";
+        unloadPlugin -f "maya2017_zSpace_Polytopal.mll";
         print("unloadingPlugs\n");
 }
 
@@ -34,6 +35,7 @@ global proc cleanFile()
     select -add polypackingMesh ;
     doDelete;
     
+    //// change back to viewport 2.0
     setRendererInModelPanel "vp2Renderer" modelPanel1;
     setRendererInModelPanel "vp2Renderer" modelPanel2;
     setRendererInModelPanel "vp2Renderer" modelPanel3;
@@ -47,7 +49,7 @@ setRendererInModelPanel base_OpenGL_Renderer modelPanel3;
 setRendererInModelPanel base_OpenGL_Renderer modelPanel4;
 
 // ---------------------------------  make connections
-catch (`loadPlugin("maya_zSpace_Polytopal_2017.mll")`);
+catch (`loadPlugin("maya2017_zSpace_Polytopal.mll")`);
 {
     string $inputMeshes[];
     
@@ -97,19 +99,20 @@ catch (`loadPlugin("maya_zSpace_Polytopal_2017.mll")`);
 // ----- procs for window 
 global proc setupPolyhedra()
 {
-setAttr "|maya_zSpace_polytopal.reset" 1;    
+setAttr "|maya_zSpace_polytopal.reset" 1;
+print("setup/ reset\n"); 
 }
-
-
 
 global proc exportGraphCurves()
 {
-setAttr "|maya_zSpace_polytopal.exportGraphCurves" 1;    
+setAttr "|maya_zSpace_polytopal.exportGraphCurves" 1;
+print("Curves successfully exported to Maya.\n");   
 }
 
 global proc exportJson()
 {
-setAttr "|maya_zSpace_polytopal.exportJson" 1;    
+setAttr "|maya_zSpace_polytopal.exportJson" 1;  
+print("Json successfully exported to defined directory.\n");  
 }
 
 // ----- create window 
@@ -120,17 +123,22 @@ text -label "Setup";
 button  -l "Setup/ Reset" -c setupPolyhedra; 
 separator -height 40 -style "none";
 
-text -label "Compute Equlibrium";
+text -label "Compute Equilibrium";
 attrControlGrp -a ($nodeName +".AngleTolerance");
 attrControlGrp -a ($nodeName +".minMax_formEdge");  	                 
 attrControlGrp -a ($nodeName +".maxIterations");
 attrControlGrp -a ($nodeName +".timeStep");
 separator -height 20 -style "none";
-attrControlGrp -a ($nodeName +".computeEquliibrium");
+attrControlGrp -a ($nodeName +".computeEquilibrium");
+separator -height 40 -style "none";
+
+text -label "Display";
+attrControlGrp -a ($nodeName +".displayForceVectors"); 
+attrControlGrp -a ($nodeName +".displayForceVectorLength"); 		     
 separator -height 40 -style "none";
 
 text -label "IO";
 button -l "Export Graph Cruves to Maya" -c exportGraphCurves; 
-button -l "Export Json to Directory" -c computeEqui; 
+button -l "Export Json to Directory" -c exportJson; 
            	          
 showWindow $windowName;
