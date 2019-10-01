@@ -9,14 +9,17 @@ if(size($seln) == 0)
     confirmDialog -message "Please select Polyhedra." -button "Ok";
     error "No Polyhedra selected!";
 }
-
-//// freeze all polyhedra
-makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 -pn 1;
-
-confirmDialog -message "Please define the working directory/ folder in the next dialog window." -button "Ok";
-string $directory[] =`fileDialog2 -fm 3 -cap "Select your working directory"`;
 global string $nodeName = "maya_zSpace_polytopal";
 string $windowName = "zSpace_Polytopal";
+
+//// freeze transformation for all polyhedra
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 -pn 1;
+
+//// define working directory
+confirmDialog -message "Please define the working directory/ folder in the next dialog window." -button "Ok";
+string $directory[] =`fileDialog2 -fm 3 -cap "Select your working directory"`;
+if(size($directory) == 0) error "Cancled working directory selection";
+
 
 // ----- unload plugin
 global proc unloadPlugs()
