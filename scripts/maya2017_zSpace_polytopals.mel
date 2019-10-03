@@ -1,6 +1,7 @@
 //----------------------------------------
-// MAYA zSPACE POLYTOPAL ARRAY 2017
+// MAYA 2017 zSPACE POLYTOPAL ARRAY
 //----------------------------------------
+string $version = "v0.1"; // Oct 2019
 
 // ----- variables & dialog
 string $seln[] = `filterExpand -sm 12`;
@@ -10,7 +11,6 @@ if(size($seln) == 0)
     error "No Polyhedra selected!";
 }
 global string $nodeName = "maya_zSpace_polytopal";
-string $windowName = "zSpace_Polytopal";
 
 //// freeze transformation for all polyhedra
 makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 -pn 1;
@@ -42,14 +42,27 @@ global proc cleanFile()
     setRendererInModelPanel "vp2Renderer" modelPanel1;
     setRendererInModelPanel "vp2Renderer" modelPanel2;
     setRendererInModelPanel "vp2Renderer" modelPanel3;
-    setRendererInModelPanel "vp2Renderer" modelPanel4; 
+    setRendererInModelPanel "vp2Renderer" modelPanel4;
+
+    //// change to smoothShaded
+    modelEditor -e -displayAppearance smoothShaded modelPanel1;
+    modelEditor -e -displayAppearance smoothShaded modelPanel2;
+    modelEditor -e -displayAppearance smoothShaded modelPanel3;
+    modelEditor -e -displayAppearance smoothShaded modelPanel4;
+
 }
 
-// ----- change to legacy renderer
+// ----- change viewport to legacy renderer
 setRendererInModelPanel base_OpenGL_Renderer modelPanel1;
 setRendererInModelPanel base_OpenGL_Renderer modelPanel2;
 setRendererInModelPanel base_OpenGL_Renderer modelPanel3;
 setRendererInModelPanel base_OpenGL_Renderer modelPanel4;
+// ----- change viewport to wireframe
+modelEditor -e -displayAppearance wireframe modelPanel1;
+modelEditor -e -displayAppearance wireframe modelPanel2;
+modelEditor -e -displayAppearance wireframe modelPanel3;
+modelEditor -e -displayAppearance wireframe modelPanel4;
+
 
 // ---------------------------------  make connections
 catch (`loadPlugin("maya2017_zSpace_Polytopal.mll")`);
@@ -102,24 +115,31 @@ catch (`loadPlugin("maya2017_zSpace_Polytopal.mll")`);
 // ----- procs for window 
 global proc setupPolyhedra()
 {
-setAttr "|maya_zSpace_polytopal.reset" 1;
-print("setup/ reset\n"); 
+    setAttr "|maya_zSpace_polytopal.reset" 1;
+    print("setup/ reset\n"); 
 }
 
 global proc exportGraphCurves()
 {
-setAttr "|maya_zSpace_polytopal.exportGraphCurves" 1;
-print("Curves successfully exported to Maya.\n");   
+    setAttr "|maya_zSpace_polytopal.exportGraphCurves" 1;
+    print("Curves successfully exported to Maya.\n");   
 }
 
 global proc exportJson()
 {
-setAttr "|maya_zSpace_polytopal.exportJson" 1;  
-print("Json successfully exported to defined directory.\n");  
+    setAttr "|maya_zSpace_polytopal.exportJson" 1;  
+    print("Json successfully exported to defined directory.\n");  
+}
+
+global proc fabricationScale()
+{
+    setAttr "|maya_zSpace_polytopal.fabricationScale" 1;
 }
 
 // ----- create window 
-window -backgroundColor 0.1 0.1 0.1 -w 500 -title $windowName -closeCommand cleanFile $windowName;
+string $windowName = "zSpace_Polytopal";
+
+window -backgroundColor 0.1 0.1 0.1 -w 400 -title ($windowName + " " + $version) -closeCommand cleanFile $windowName;
 rowColumnLayout -numberOfColumns 1 -columnWidth 1 400;
 
 text -label "Setup";
@@ -141,6 +161,8 @@ attrControlGrp -a ($nodeName +".displayForceVectorLength");
 separator -height 40 -style "none";
 
 text -label "IO";
+attrControlGrp -a ($nodeName +".fabricationMaxLength");
+button  -l "Scale to max fabrication length" -c fabricationScale; 
 button -l "Export Graph Cruves to Maya" -c exportGraphCurves; 
 button -l "Export Json to Directory" -c exportJson; 
            	          

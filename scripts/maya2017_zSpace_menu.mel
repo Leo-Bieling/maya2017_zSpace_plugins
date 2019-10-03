@@ -1,5 +1,4 @@
 //check if usersetup.mel exists and add it in case
-
 string $PathUS = `internalVar -usd`;
 
 if(`filetest -f ($PathUS+"userSetup.mel")`)
@@ -39,7 +38,7 @@ if(`layout -q -ex "zSpace"`)
 {
 	string $ShelfButtons[] = `shelfLayout -q -ca "zSpace"`;
 	
-	if(size($ShelfButtons) != 1) // change this count as more plugins get added
+	if(size($ShelfButtons) != 2) // change this count as more plugins get added
 	{
 		for($Con in $ShelfButtons)
 		{
@@ -55,7 +54,7 @@ if(`layout -q -ex "zSpace"`)
 
 	 }
 
-    print "Buttons loaded\n";
+    print "Shelf buttons loaded.\n";
 }
 else
 {
@@ -67,14 +66,15 @@ else
 	string $Im2Path = ($PathUS + "icons/3dgs.png");
 	shelfButton -w 60 -p "zSpace" -annotation "Opens the 3d Graphic Statics window" -image1 $Im2Path -command ("source \"" + $PathUS + "maya2017_zSpace_polytopals.mel\"");
     
-   print "Buttons loaded\n";
+   print "Shelf buttons loaded.\n";
 }
 
 //add menu
 buildFileMenu(); 
 global string $myMenuMain;
+
 if (`menu -exists zSpace`)
-       deleteUI -m zSpace;
+    deleteUI -m zSpace;
 
 global string $gMainWindow;
 $myMenuMain = `menu -p $gMainWindow -tearOff true -l "zSpace" zSpace`;
@@ -82,4 +82,4 @@ $myMenuMain = `menu -p $gMainWindow -tearOff true -l "zSpace" zSpace`;
 menuItem -p $myMenuMain -l "zSpace IO" -command ("source \"" + $PathUS + "maya2017_zSpace_IO.mel\"");
 menuItem -p $myMenuMain -l "zSpace 3D Graphic Statics" -command ("source \"" + $PathUS + "maya2017_zSpace_polytopals.mel\"");
 
-print "Menus loaded\n";
+print "Menus loaded.\n";

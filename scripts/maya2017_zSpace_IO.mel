@@ -1,6 +1,7 @@
 //----------------------------------------
-// MAYA2017 zSPACE IO
+// MAYA2017 zSPACE IO 
 //----------------------------------------
+global string $version = "v0.1"; // Oct 2019
 
 // ----- unload/load plugin
 if(`pluginInfo -q -l "maya2017_zSpace_JSON_IO.mll"`) unloadPlugin -f "maya2017_zSpace_JSON_IO.mll";
@@ -283,10 +284,11 @@ global proc exportMeshJSON()
 // ----- clean up when opening a new file
 global proc unloadPlugs()
 {
+    string $version;
     print("unloadingPlugs \n ")    ;
     unloadPlugin("maya2017_zSpace_JSON_IO.mll");
 
-    deleteUI -window zSpace_IO;
+    deleteUI -window "zSpace_IO";
 }
 
 scriptJob -e "NewSceneOpened" unloadPlugs;
@@ -298,7 +300,7 @@ string $windowName = "zSpace_IO";
 
 if(`window -exists $windowName`) deleteUI $windowName unloadPlugs;
 
-window -backgroundColor 0.1 0.1 0.1 -title $windowName  -closeCommand "unloadPlugin(\"maya2017_zSpace_JSON_IO.mll\")" $windowName;
+window -backgroundColor 0.1 0.1 0.1 -title ($windowName + " " + $version)  -closeCommand "unloadPlugin(\"maya2017_zSpace_JSON_IO.mll\")" $windowName;
 rowColumnLayout -numberOfColumns 3 -columnWidth 1 180 -columnWidth 2 100 -columnWidth 3 150;
 
 text -label "Graph JSON";
