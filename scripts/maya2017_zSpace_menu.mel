@@ -51,7 +51,6 @@ if(`layout -q -ex "zSpace"`)
 
 		string $Im2Path = ($PathUS + "icons/3dgs.png");
 		shelfButton -w 60 -p "zSpace" -annotation "Opens the 3d Graphic Statics window" -image1 $Im2Path -command ("source \"" + $PathUS + "maya2017_zSpace_polytopals.mel\"");
-
 	 }
 
     print "Shelf buttons loaded.\n";
@@ -72,7 +71,6 @@ else
 //add menu
 buildFileMenu(); 
 global string $myMenuMain;
-
 if (`menu -exists zSpace`)
     deleteUI -m zSpace;
 

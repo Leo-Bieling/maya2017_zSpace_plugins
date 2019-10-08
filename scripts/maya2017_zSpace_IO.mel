@@ -300,7 +300,7 @@ string $windowName = "zSpace_IO";
 
 if(`window -exists $windowName`) deleteUI $windowName unloadPlugs;
 
-window -backgroundColor 0.1 0.1 0.1 -title ($windowName + " " + $version)  -closeCommand "unloadPlugin(\"maya2017_zSpace_JSON_IO.mll\")" $windowName;
+window -backgroundColor 0.2 0.2 0.2 -title ($windowName + " " + $version)  -closeCommand "unloadPlugin(\"maya2017_zSpace_JSON_IO.mll\")" $windowName;
 rowColumnLayout -numberOfColumns 3 -columnWidth 1 180 -columnWidth 2 100 -columnWidth 3 150;
 
 text -label "Graph JSON";
