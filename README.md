@@ -1,6 +1,6 @@
-# Collection of zSpace plugins for maya 2017 
-written by Vishu Bhooshan, Leo Bieling and Marko Margeta
-
+# Collection of zSpace plugins for maya 2017
+written by Vishu Bhooshan, Leo Bieling and Marko Margeta <br>
+v0.1
 ## Install
 ---
 * copy the content of the **plug-ins** folder to: *C:\Program Files\Autodesk\Maya2017\bin\plug-ins*
@@ -43,4 +43,9 @@ written by Vishu Bhooshan, Leo Bieling and Marko Margeta
 * if multiple meshes are selected for export it will export one .json file per mesh with the _0 suffix automatically added
 ---
 ### zSpace_3DGS
+3D Graphic Statics Plugin
+##### documentation will be added soon.
+---
+### zSpace_M2P
+Mesh2Pix Plugin
 ##### documentation will be added soon.

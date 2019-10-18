@@ -16,16 +16,14 @@ global string $nodeName = "maya_zSpace_polytopal";
 makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 -pn 1;
 
 //// define working directory
-confirmDialog -message "Please define the working directory/ folder in the next dialog window." -button "Ok";
+confirmDialog -title "zSpace_Polytopal" -icon "information" -message "Please define the working directory/ folder in the next dialog window." -button "Ok";
 string $directory[] =`fileDialog2 -fm 3 -cap "Select your working directory"`;
 if(size($directory) == 0) error "Cancled working directory selection";
 
 
 // ----- unload plugin
 global proc unloadPlugs()
-{
-    
-        
+{   
         unloadPlugin -f "maya2017_zSpace_Polytopal.mll";
         print("unloadingPlugs\n");
 }

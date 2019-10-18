@@ -38,7 +38,7 @@ if(`layout -q -ex "zSpace"`)
 {
 	string $ShelfButtons[] = `shelfLayout -q -ca "zSpace"`;
 	
-	if(size($ShelfButtons) != 2) // change this count as more plugins get added
+	if(size($ShelfButtons) != 3) // change this count as more plugins get added
 	{
 		for($Con in $ShelfButtons)
 		{
@@ -51,7 +51,10 @@ if(`layout -q -ex "zSpace"`)
 
 		string $Im2Path = ($PathUS + "icons/3dgs.png");
 		shelfButton -w 60 -p "zSpace" -annotation "Opens the 3d Graphic Statics window" -image1 $Im2Path -command ("source \"" + $PathUS + "maya2017_zSpace_polytopals.mel\"");
-	 }
+
+		string $Im3Path = ($PathUS + "icons/m2p.png");
+		shelfButton -w 60 -p "zSpace" -annotation "Opens the Mesh2Pix window" -image1 $Im3Path -command ("source \"" + $PathUS + "maya2017_zSpace_mesh2pix.mel\"");		
+	}
 
     print "Shelf buttons loaded.\n";
 }
@@ -64,7 +67,10 @@ else
 
 	string $Im2Path = ($PathUS + "icons/3dgs.png");
 	shelfButton -w 60 -p "zSpace" -annotation "Opens the 3d Graphic Statics window" -image1 $Im2Path -command ("source \"" + $PathUS + "maya2017_zSpace_polytopals.mel\"");
-    
+
+	string $Im3Path = ($PathUS + "icons/m2p.png");
+	shelfButton -w 60 -p "zSpace" -annotation "Opens the Mesh2Pix window" -image1 $Im3Path -command ("source \"" + $PathUS + "maya2017_zSpace_mesh2pix.mel\"");
+        
    print "Shelf buttons loaded.\n";
 }
 
@@ -79,5 +85,7 @@ $myMenuMain = `menu -p $gMainWindow -tearOff true -l "zSpace" zSpace`;
 
 menuItem -p $myMenuMain -l "zSpace IO" -command ("source \"" + $PathUS + "maya2017_zSpace_IO.mel\"");
 menuItem -p $myMenuMain -l "zSpace 3D Graphic Statics" -command ("source \"" + $PathUS + "maya2017_zSpace_polytopals.mel\"");
+menuItem -p $myMenuMain -l "zSpace Mesh2Pix" -command ("source \"" + $PathUS + "maya2017_zSpace_mesh2pix.mel\"");
+menuItem -p $myMenuMain -l "Help" -command ("source \"" + $PathUS + "maya2017_zSpace_help.mel\"");
 
 print "Menus loaded.\n";

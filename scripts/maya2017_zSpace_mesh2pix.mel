@@ -1,0 +1,133 @@
+//----------------------------------------
+// MAYA 2017 zSPACE MESH2PIX
+//----------------------------------------
+global string $version = "v0.1"; // Oct 2019
+
+// ----- unload/load plugin
+if(`pluginInfo -q -l "maya2017_zSpace_Mesh2Pix.mll"`) unloadPlugin -f "maya2017_zSpace_Mesh2Pix.mll";
+loadPlugin("maya2017_zSpace_Mesh2Pix.mll");
+
+string $nodeName = "maya_zSpace_M2P";
+
+// ---------------------------------  PROCEDURES
+// ----- unload plugin
+proc unloadPlugs()
+{
+    flushUndo; // to cleanly unload the plugin - otherwise its crashing
+    unloadPlugin -f "maya2017_zSpace_Mesh2Pix.mll";
+    print("unloadingPlugs\n");
+    
+    deleteUI -window zSpace_Mesh2Pix;
+}
+
+// ----- clean file
+scriptJob -e "NewSceneOpened"  unloadPlugs;
+
+global proc cleanFile()
+{    
+    select -r "|maya_zSpace_M2P";
+    select -add emptyMesh;
+    doDelete;
+
+    flushUndo; // to cleanly unload the plugin - otherwise its crashing
+    unloadPlugin -f "maya2017_zSpace_Mesh2Pix.mll";
+}
+
+// ----- write M2P_dataSet
+global proc write_M2P_dataSet()
+{
+    setAttr "|maya_zSpace_M2P.M2P_dataSet" 1;
+}
+
+global proc write_M2P_image()
+{
+    setAttr "|maya_zSpace_M2P.M2P_predict" 1;
+}
+
+global proc read_M2P_prediction()
+{
+    setAttr "|maya_zSpace_M2P.M2P_getPrediction" 1;
+}
+
+// ---------------------------------  MAKE CONNECTIONS
+catch (`loadPlugin("maya2017_zSpace_Mesh2Pix.mll")`);
+{
+    // get selection
+    string $seln[] = `filterExpand -sm 12`;
+    //conditions
+    if(size($seln) == 0)
+    {
+        confirmDialog -title "zSpace_Mesh2Pix" -icon "information" -message "Please select a mesh." -button "Ok";
+        error "No mesh selected!";
+        unloadPlugin -f "maya2017_zSpace_Mesh2Pix.mll";
+
+    }
+
+    $tmp = `polyEvaluate -v`;
+    if ($tmp[0] > 256)
+    {
+        confirmDialog -title "zSpace_Mesh2Pix" -icon "information" -message "Please select a mesh with less then 256 vertices." -button "Ok";
+        error "Vertex count to high!";
+        unloadPlugin -f "maya2017_zSpace_Mesh2Pix.mll";
+    }
+    
+    string $inputMesh_m = $seln[0];
+    //// freeze transformation for all polyhedra
+    makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 -pn 1;
+
+    // create necessary nodes
+    string $node = `createNode maya_zSpace_M2P`;
+    string $emptyMesh = `createNode mesh`;
+   // string $meshPrediction = `createNode mesh`;
+
+    // create necessary nodes
+    connectAttr -f ($inputMesh_m + ".outMesh") ( $node + ".inMesh");
+    connectAttr -f ($node + ".outMesh") ( $emptyMesh + ".inMesh");
+    
+    select -r $emptyMesh;
+    sets -e -forceElement initialShadingGroup;
+    toggleShadeMode;
+
+    $parent = `listRelatives - parent $node` ;
+    rename $parent[0] $nodeName ;
+
+    $parent = `listRelatives - parent $emptyMesh`;
+    rename $parent[0] "emptyMesh";
+}
+
+// ---------------------------------  CREATE GUI
+string $windowName = "zSpace_Mesh2Pix";
+
+if (`window -exists $windowName`) 
+{
+    deleteUI $windowName;
+    if (`windowPref -exists $windowName`) windowPref -remove $windowName;
+} 
+
+window -backgroundColor 0.2 0.2 0.2 -title ("zSpace Mesh2Pix " + $version) -closeCommand cleanFile $windowName;
+rowColumnLayout;
+
+text -label "Write Mesh2Pix support data";
+attrControlGrp -a ($nodeName +".imgOutputPath");
+attrControlGrp -a ($nodeName +".fileName");
+attrControlGrp -a ($nodeName +".maxOverhangAngle");
+attrControlGrp -a ($nodeName +".train");
+attrControlGrp -a ($nodeName +".perturb");
+attrControlGrp -a ($nodeName +".perturbVector");
+attrControlGrp -a ($nodeName +".dataSetSize");
+button -w 200 -l "Create data" -c write_M2P_dataSet; 
+separator -height 40 -style "double";
+
+text -label "Write Mesh2Pix image";
+attrControlGrp -a ($nodeName +".imgOutputPath");
+attrControlGrp -a ($nodeName +".fileName");
+button -w 200 -l "Create mesh image" -c write_M2P_image; 
+separator -height 40 -style "double";
+
+text -label "Read Mesh2Pix prediction image";
+attrControlGrp -a ($nodeName +".imgInputPath");
+attrControlGrp -a ($nodeName +".fileName");
+button -w 200 -l "Read M2P prediction image" -c read_M2P_prediction; 
+separator -height 40 -style "double";
+
+showWindow $windowName;
