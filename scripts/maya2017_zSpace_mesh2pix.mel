@@ -1,110 +1,109 @@
 //----------------------------------------
 // MAYA 2017 zSPACE MESH2PIX
 //----------------------------------------
-global string $version = "v0.1"; // Oct 2019
+global string $version = "v0.2"; // Oct 2019
+global string $pluginFileName = "maya2017_zSpace_Mesh2Pix.mll";
+global string $nodeName = "maya_zSpace_M2P_";
+global string $windowName = "zSpace_Mesh2Pix";
 
 // ----- unload/load plugin
-if(`pluginInfo -q -l "maya2017_zSpace_Mesh2Pix.mll"`) unloadPlugin -f "maya2017_zSpace_Mesh2Pix.mll";
-loadPlugin("maya2017_zSpace_Mesh2Pix.mll");
-
-string $nodeName = "maya_zSpace_M2P";
-
-// ---------------------------------  PROCEDURES
-// ----- unload plugin
-proc unloadPlugs()
+if(`pluginInfo -q -l $pluginFileName`)
 {
-    flushUndo; // to cleanly unload the plugin - otherwise its crashing
-    unloadPlugin -f "maya2017_zSpace_Mesh2Pix.mll";
-    print("unloadingPlugs\n");
-    
-    deleteUI -window zSpace_Mesh2Pix;
+    flushUndo;
+    unloadPlugin -f $pluginFileName;
+}
+loadPlugin($pluginFileName);
+
+// ----- clean up
+global proc cleanUp()
+{
+    global string $windowName;
+    global string $pluginFileName;
+
+    flushUndo;
+    unloadPlugin -f $pluginFileName;
+
+    if(`window -exists $windowName`) deleteUI -window $windowName;
 }
 
-// ----- clean file
-scriptJob -e "NewSceneOpened"  unloadPlugs;
+scriptJob -e "NewSceneOpened" cleanUp;
+scriptJob -e "SceneOpened" cleanUp;
 
 global proc cleanFile()
 {    
-    select -r "|maya_zSpace_M2P";
+    global string $pluginFileName;
+    global string $nodeName;
+    
+    select -r $nodeName;
     select -add emptyMesh;
     doDelete;
 
-    flushUndo; // to cleanly unload the plugin - otherwise its crashing
-    unloadPlugin -f "maya2017_zSpace_Mesh2Pix.mll";
+    flushUndo;
+    unloadPlugin -f $pluginFileName;
 }
 
-// ----- write M2P_dataSet
+// ----- make connections
+// get selection
+string $seln[] = `filterExpand -sm 12`;
+
+//conditions
+if(size($seln) == 0)
+{
+    confirmDialog -title "zSpace_Mesh2Pix" -icon "information" -message "Please select a mesh." -button "Ok";
+    cleanUp;
+    error "No mesh selected!";
+}
+
+$tmp = `polyEvaluate -v`;
+
+if ($tmp[0] > 256)
+{
+    confirmDialog -title "zSpace_Mesh2Pix" -icon "information" -message "Please select a mesh with less then 256 vertices." -button "Ok";
+    cleanUp;
+    error "Vertex count to high!";
+}
+    
+string $inputMesh_m = $seln[0];
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 -pn 1;
+
+// create necessary nodes
+string $node = `createNode maya_zSpace_M2P`;
+string $emptyMesh = `createNode mesh`;
+
+// create necessary nodes
+connectAttr -f ($inputMesh_m + ".outMesh") ( $node + ".inMesh");
+connectAttr -f ($node + ".outMesh") ( $emptyMesh + ".inMesh");
+    
+select -r $emptyMesh;
+sets -e -forceElement initialShadingGroup;
+toggleShadeMode;
+
+$parent = `listRelatives - parent $node` ;
+rename $parent[0] $nodeName ;
+
+$parent = `listRelatives - parent $emptyMesh`;
+rename $parent[0] "emptyMesh";
+
+// ----- procs for window 
 global proc write_M2P_dataSet()
 {
-    setAttr "|maya_zSpace_M2P.M2P_dataSet" 1;
+    setAttr "maya_zSpace_M2P.M2P_dataSet" 1;
 }
 
 global proc write_M2P_image()
 {
-    setAttr "|maya_zSpace_M2P.M2P_predict" 1;
+    setAttr "maya_zSpace_M2P.M2P_predict" 1;
 }
 
 global proc read_M2P_prediction()
 {
-    setAttr "|maya_zSpace_M2P.M2P_getPrediction" 1;
+    setAttr "maya_zSpace_M2P.M2P_getPrediction" 1;
 }
 
-// ---------------------------------  MAKE CONNECTIONS
-catch (`loadPlugin("maya2017_zSpace_Mesh2Pix.mll")`);
-{
-    // get selection
-    string $seln[] = `filterExpand -sm 12`;
-    //conditions
-    if(size($seln) == 0)
-    {
-        confirmDialog -title "zSpace_Mesh2Pix" -icon "information" -message "Please select a mesh." -button "Ok";
-        error "No mesh selected!";
-        unloadPlugin -f "maya2017_zSpace_Mesh2Pix.mll";
+// ----- create Window 
+if(`window -exists $windowName`) deleteUI -window $windowName;
 
-    }
-
-    $tmp = `polyEvaluate -v`;
-    if ($tmp[0] > 256)
-    {
-        confirmDialog -title "zSpace_Mesh2Pix" -icon "information" -message "Please select a mesh with less then 256 vertices." -button "Ok";
-        error "Vertex count to high!";
-        unloadPlugin -f "maya2017_zSpace_Mesh2Pix.mll";
-    }
-    
-    string $inputMesh_m = $seln[0];
-    //// freeze transformation for all polyhedra
-    makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 -pn 1;
-
-    // create necessary nodes
-    string $node = `createNode maya_zSpace_M2P`;
-    string $emptyMesh = `createNode mesh`;
-   // string $meshPrediction = `createNode mesh`;
-
-    // create necessary nodes
-    connectAttr -f ($inputMesh_m + ".outMesh") ( $node + ".inMesh");
-    connectAttr -f ($node + ".outMesh") ( $emptyMesh + ".inMesh");
-    
-    select -r $emptyMesh;
-    sets -e -forceElement initialShadingGroup;
-    toggleShadeMode;
-
-    $parent = `listRelatives - parent $node` ;
-    rename $parent[0] $nodeName ;
-
-    $parent = `listRelatives - parent $emptyMesh`;
-    rename $parent[0] "emptyMesh";
-}
-
-// ---------------------------------  CREATE GUI
-string $windowName = "zSpace_Mesh2Pix";
-
-if (`window -exists $windowName`) 
-{
-    deleteUI $windowName;
-    if (`windowPref -exists $windowName`) windowPref -remove $windowName;
-} 
-
-window -backgroundColor 0.2 0.2 0.2 -title ("zSpace Mesh2Pix " + $version) -closeCommand cleanFile $windowName;
+window -backgroundColor 0.1 0.1 0.1 -title ($windowName + " " + $version) -cc cleanFile $windowName;
 rowColumnLayout;
 
 text -label "Write Mesh2Pix support data";

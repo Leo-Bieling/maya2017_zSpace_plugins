@@ -1,41 +1,42 @@
 //----------------------------------------
 // MAYA 2017 zSPACE POLYTOPAL ARRAY
 //----------------------------------------
-string $version = "v0.1"; // Oct 2019
+global string $version = "v0.2"; // Oct 2019
+global string $pluginFileName = "maya2017_zSpace_Polytopal.mll";
+global string $nodeName = "maya_zSpace_POLYTOPAL";
+global string $windowName = "zSpace_Polytopal";
 
-// ----- variables & dialog
-string $seln[] = `filterExpand -sm 12`;
-if(size($seln) == 0)
+// ----- unload/load plugin
+if(`pluginInfo -q -l $pluginFileName`)
 {
-    confirmDialog -message "Please select Polyhedra." -button "Ok";
-    error "No Polyhedra selected!";
+    flushUndo;
+    unloadPlugin -f $pluginFileName;
 }
-global string $nodeName = "maya_zSpace_polytopal";
+loadPlugin($pluginFileName);
 
-//// freeze transformation for all polyhedra
-makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 -pn 1;
+// ----- clean up
+global proc cleanUp()
+{
+    global string $windowName;
+    global string $pluginFileName;
 
-//// define working directory
-confirmDialog -title "zSpace_Polytopal" -icon "information" -message "Please define the working directory/ folder in the next dialog window." -button "Ok";
-string $directory[] =`fileDialog2 -fm 3 -cap "Select your working directory"`;
-if(size($directory) == 0) error "Cancled working directory selection";
+    flushUndo;
+    unloadPlugin -f $pluginFileName;
 
-
-// ----- unload plugin
-global proc unloadPlugs()
-{   
-        unloadPlugin -f "maya2017_zSpace_Polytopal.mll";
-        print("unloadingPlugs\n");
+    if(`window -exists $windowName`) deleteUI -window $windowName;
 }
 
-// ----- clean file
-scriptJob -e "NewSceneOpened"  unloadPlugs;
+scriptJob -e "NewSceneOpened" cleanUp;
+scriptJob -e "SceneOpened" cleanUp;
 
 global proc cleanFile()
-{    
-    select -r |maya_zSpace_polytopal ;
-    select -add resultMesh ;
-    select -add polypackingMesh ;
+{   
+    global string $pluginFileName;
+    global string $nodeName;
+
+    select -r $nodeName;
+    select -add resultMesh;
+    select -add polypackingMesh;
     doDelete;
     
     //// change back to viewport 2.0
@@ -50,7 +51,26 @@ global proc cleanFile()
     modelEditor -e -displayAppearance smoothShaded modelPanel3;
     modelEditor -e -displayAppearance smoothShaded modelPanel4;
 
+    flushUndo;
+    unloadPlugin -f $pluginFileName;
 }
+
+// ----- variables & dialog
+string $seln[] = `filterExpand -sm 12`;
+
+if(size($seln) == 0)
+{
+    confirmDialog -message "Please select Polyhedra." -button "Ok";
+    error "No Polyhedra selected!";
+}
+
+//// freeze transformation for all polyhedra
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 -pn 1;
+
+//// define working directory
+confirmDialog -title "zSpace_Polytopal" -icon "information" -message "Please define the working directory/ folder in the next dialog window." -button "Ok";
+string $directory[] =`fileDialog2 -fm 3 -cap "Select your working directory"`;
+if(size($directory) == 0) error "Cancled working directory selection";
 
 // ----- change viewport to legacy renderer
 setRendererInModelPanel base_OpenGL_Renderer modelPanel1;
@@ -63,89 +83,75 @@ modelEditor -e -displayAppearance wireframe modelPanel2;
 modelEditor -e -displayAppearance wireframe modelPanel3;
 modelEditor -e -displayAppearance wireframe modelPanel4;
 
-
-// ---------------------------------  make connections
-catch (`loadPlugin("maya2017_zSpace_Polytopal.mll")`);
-{
-    string $inputMeshes[];
+// ----- make connections
+string $inputMeshes[];
     
-    string $node = `createNode maya_zSpace_polytopal`;
-    string $mesh = `createNode mesh`;
-    string $explodemesh = `createNode mesh`;
+string $node = `createNode maya_zSpace_polytopal`;
+string $mesh = `createNode mesh`;
+string $explodemesh = `createNode mesh`;
   
-    setAttr -type "string" ( $node + ".fileDirectory" ) $directory;
+setAttr -type "string" ( $node + ".fileDirectory" ) $directory;
     
-    for($i =0; $i <  size($seln); $i++)
-    {
-        $inputMeshes[$i] = $seln[$i];
-    }
-    
-    for($i=0; $i<size($inputMeshes); $i++)
-    {
-        string $inMesh_m = $inputMeshes[$i];
-            
-        connectAttr -f ( $inMesh_m + ".outMesh") ( $node +".inMeshes[" + $i + "]");
-    }
-    
-    //connectAttr -f ( $inputMesh + ".outMesh") ( $node +".inMesh" );
-    
-    connectAttr -f ( $node + ".outMesh") ( $mesh+".inMesh" );
-    connectAttr -f ( $node + ".outMesh_explode") ( $explodemesh+".inMesh" );
-    connectAttr -f time1.outTime ( $node + ".time" );
-
-    select -r $mesh;
-    sets -e -forceElement initialShadingGroup;
-    toggleShadeMode;
-    
-    select -r $explodemesh;
-    sets -e -forceElement initialShadingGroup;
-    toggleShadeMode;
-    
-          
-    $parent = `listRelatives - parent $node` ;
-    rename $parent[0] $nodeName ;
-    
-    $parent = `listRelatives - parent $mesh` ;
-    rename $parent[0] "resultMesh" ;  
-    
-    $parent = `listRelatives - parent $explodemesh` ;
-    rename $parent[0] "polypackingMesh" ;
+for($i =0; $i <  size($seln); $i++)
+{
+    $inputMeshes[$i] = $seln[$i];
 }
+    
+for($i=0; $i<size($inputMeshes); $i++)
+{
+    string $inMesh_m = $inputMeshes[$i];       
+    connectAttr -f ( $inMesh_m + ".outMesh") ( $node +".inMeshes[" + $i + "]");
+}
+
+connectAttr -f ( $node + ".outMesh") ( $mesh+".inMesh" );
+connectAttr -f ( $node + ".outMesh_explode") ( $explodemesh+".inMesh" );
+connectAttr -f time1.outTime ( $node + ".time" );
+
+select -r $mesh;
+sets -e -forceElement initialShadingGroup;
+toggleShadeMode;
+    
+select -r $explodemesh;
+sets -e -forceElement initialShadingGroup;
+toggleShadeMode;    
+          
+$parent = `listRelatives - parent $node` ;
+rename $parent[0] $nodeName ;
+    
+$parent = `listRelatives - parent $mesh` ;
+rename $parent[0] "resultMesh" ;  
+    
+$parent = `listRelatives - parent $explodemesh` ;
+rename $parent[0] "polypackingMesh" ;
 
 // ----- procs for window 
 global proc setupPolyhedra()
 {
-    setAttr "|maya_zSpace_polytopal.reset" 1;
+    setAttr "maya_zSpace_polytopal.reset" 1;
     print("setup/ reset\n"); 
 }
 
 global proc exportGraphCurves()
 {
-    setAttr "|maya_zSpace_polytopal.exportGraphCurves" 1;
+    setAttr "maya_zSpace_polytopal.exportGraphCurves" 1;
     print("Curves successfully exported to Maya.\n");   
 }
 
 global proc exportJson()
 {
-    setAttr "|maya_zSpace_polytopal.exportJson" 1;  
+    setAttr "maya_zSpace_polytopal.exportJson" 1;  
     print("Json successfully exported to defined directory.\n");  
 }
 
 global proc fabricationScale()
 {
-    setAttr "|maya_zSpace_polytopal.fabricationScale" 1;
+    setAttr "maya_zSpace_polytopal.fabricationScale" 1;
 }
 
-// ----- create window 
-string $windowName = "zSpace_Polytopal";
+// ----- create Window 
+if(`window -exists $windowName`) deleteUI -window $windowName;
 
-if (`window -exists $windowName`) 
-{
-    deleteUI $windowName;
-    if (`windowPref -exists $windowName`) windowPref -remove $windowName;
-} 
-
-window -backgroundColor 0.2 0.2 0.2 -title ("zSpace 3D Graphic Statics " + $version) -closeCommand cleanFile $windowName;
+window -bgc 0.1 0.1 0.1 -t ($windowName + " " + $version) -cc cleanFile $windowName;
 rowColumnLayout;
 
 text -label "Setup";

@@ -1,6 +1,6 @@
 # Collection of zSpace plugins for maya 2017
 written by Vishu Bhooshan, Leo Bieling and Marko Margeta <br>
-v0.1
+v0.2
 ## Install
 ---
 * copy the content of the **plug-ins** folder to: *C:\Program Files\Autodesk\Maya2017\bin\plug-ins*
