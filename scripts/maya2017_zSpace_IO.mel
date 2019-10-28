@@ -120,13 +120,14 @@ global proc exportGraphJSON()
     for($i = 0; $i < size($seln); $i++ )
     {
         // duplicate selection and freeze transformation
-        select $seln[0];
+        select $seln[$i];
         duplicate -rr -n ("tmpDuplicate_" + $i);
         makeIdentity -apply true -t 1 -r 1 -s 1;
 
         // make connections and set attributes
         connectAttr -f ("tmpDuplicate_" + $i + ".worldSpace") ("tmpNode.inCurves[" + $i + "]");
     }
+    refresh; // refresh necessary, otherwise it is not exporting
 
     // set attributes
     setAttr -type "string" ("tmpNode.directoryPath") $filePathExGraphJSON;
